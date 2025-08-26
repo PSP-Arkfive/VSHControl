@@ -9,3 +9,5 @@
 #include "pspimport.s"
 	IMPORT_START "SysclibForUser",0x40090000
 	IMPORT_FUNC  "SysclibForUser",0x4C0FE24C,user_malloc
+	IMPORT_FUNC  "SysclibForUser",0xBC7554DF,strcasecmp
+	IMPORT_FUNC  "SysclibForUser",0xAC7554DF,strncasecmp

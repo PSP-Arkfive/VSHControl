@@ -12,8 +12,6 @@ OBJS = main.o \
 	src/custom_update.o \
 	src/hibernation_delete.o \
 	src/registry.o \
-	external/src/strsafe.o \
-	external/src/strcasecmp.o
 
 IMPORTS = imports.o
 
