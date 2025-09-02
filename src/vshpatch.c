@@ -117,6 +117,22 @@ exit:
     return 0;
 }
 
+static int (*prev_start)(int modid, SceSize argsize, void * argp, int * modstatus, SceKernelSMOption * opt) = NULL;
+static int StartModuleHandler(int modid, SceSize argsize, void * argp, int * modstatus, SceKernelSMOption * opt){
+
+    SceModule2* mod = (SceModule2*) sceKernelFindModuleByUID(modid);
+
+    if (mod && strcmp(mod->modname, "vsh_module") == 0) {
+        // Load XMB Control
+        SceUID modid = sceKernelLoadModule(XMBCTRL_PRX_FLASH, 0, NULL);
+        if (modid >= 0) sceKernelStartModule(modid, 0, NULL, NULL, NULL);
+    }
+
+    // forward to previous or default StartModule
+    if (prev_start) return prev_start(modid, argsize, argp, modstatus, opt);
+    return -1;
+}
+
 static void patch_sceCtrlReadBufferPositive(void)
 {
     SceModule2* mod = (SceModule2*)sceKernelFindModuleByName("sceVshBridge_Driver");
@@ -503,7 +519,8 @@ static void hook_iso_io(void)
 
 int vshpatch_init(void)
 {
-    previous = sctrlHENSetStartModuleHandler(&vshpatch_module_chain);
+    previous = sctrlHENSetStartModuleHandler(vshpatch_module_chain);
+    prev_start = sctrlSetStartModuleExtra(StartModuleHandler);
     patch_sceUSB_Driver();
     vpbp_init();
     hook_iso_io();
