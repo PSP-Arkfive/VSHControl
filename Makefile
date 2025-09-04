@@ -1,4 +1,8 @@
 TARGET = vshctrl
+
+PSPSDK = $(shell psp-config --pspsdk-path)
+ARKSDK ?= external
+
 OBJS = main.o \
 	src/vshpatch.o \
 	src/xmbiso.o \
@@ -15,7 +19,7 @@ OBJS = main.o \
 
 IMPORTS = imports.o
 
-INCDIR = include external/include
+INCDIR = include $(ARKSDK)/include
 CFLAGS = -std=c99 -Os -G0 -Wall -fno-pic
 
 PSP_FW_VERSION = 660
@@ -31,9 +35,8 @@ PRX_EXPORTS = exports.exp
 USE_KERNEL_LIBC=1
 USE_KERNEL_LIBS=1
 
-LIBDIR = libs external/libs
+LIBDIR = libs $(ARKSDK)/libs
 LDFLAGS =  -nostartfiles
 LIBS = -lpspsystemctrl_kernel -lpspusb -lpspusbdevice_driver -lpspreg
 
-PSPSDK=$(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
