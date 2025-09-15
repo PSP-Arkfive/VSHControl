@@ -51,20 +51,20 @@ typedef struct _HookUserFunctions {
 
 static STMOD_HANDLER previous;
 
-static void patch_sysconf_plugin_module(SceModule2 *mod);
-static void patch_game_plugin_module(SceModule2 *mod);
-static void patch_vsh_module(SceModule2 * mod);
+static void patch_sysconf_plugin_module(SceModule *mod);
+static void patch_game_plugin_module(SceModule *mod);
+static void patch_vsh_module(SceModule * mod);
 
 static void patch_sceCtrlReadBufferPositive(void); 
-static void patch_Gameboot(SceModule2 *mod); 
-static void patch_hibblock(SceModule2 *mod); 
-static void patch_msvideo_main_plugin_module(SceModule2* mod);
+static void patch_Gameboot(SceModule *mod); 
+static void patch_hibblock(SceModule *mod); 
+static void patch_msvideo_main_plugin_module(SceModule* mod);
 
 extern SEConfig* se_config;
 
 extern int has_umd_iso;
 
-static int vshpatch_module_chain(SceModule2 *mod)
+static int vshpatch_module_chain(SceModule *mod)
 {
 
     if(0 == strcmp(mod->modname, "sysconf_plugin_module")) {
@@ -120,7 +120,7 @@ exit:
 static int (*prev_start)(int modid, SceSize argsize, void * argp, int * modstatus, SceKernelSMOption * opt) = NULL;
 static int StartModuleHandler(int modid, SceSize argsize, void * argp, int * modstatus, SceKernelSMOption * opt){
 
-    SceModule2* mod = (SceModule2*) sceKernelFindModuleByUID(modid);
+    SceModule* mod = (SceModule*) sceKernelFindModuleByUID(modid);
 
     if (mod && strcmp(mod->modname, "vsh_module") == 0) {
         // Load XMB Control
@@ -135,18 +135,18 @@ static int StartModuleHandler(int modid, SceSize argsize, void * argp, int * mod
 
 static void patch_sceCtrlReadBufferPositive(void)
 {
-    SceModule2* mod = (SceModule2*)sceKernelFindModuleByName("sceVshBridge_Driver");
+    SceModule* mod = (SceModule*)sceKernelFindModuleByName("sceVshBridge_Driver");
     sctrlHookImportByNID(mod, "sceCtrl_driver", 0xBE30CED0, _sceCtrlReadBufferPositive);
     g_sceCtrlReadBufferPositive = (void *) sctrlHENFindFunction("sceController_Service", "sceCtrl", 0x1F803938);
     sctrlHENPatchSyscall(g_sceCtrlReadBufferPositive, _sceCtrlReadBufferPositive);
 }
 
-static void patch_Gameboot(SceModule2 *mod)
+static void patch_Gameboot(SceModule *mod)
 {
     sctrlHookImportByNID(mod, "sceDisplay_driver", 0x3552AB11, 0);
 }
 
-static void patch_hibblock(SceModule2 *mod)
+static void patch_hibblock(SceModule *mod)
 {
     u32 text_addr = mod->text_addr;
     u32 top_addr = text_addr + mod->text_size;
@@ -194,7 +194,7 @@ int myIoMkdir(const char *dir, SceMode mode)
     return ret;
 }
 
-static void patch_sysconf_plugin_module(SceModule2 *mod)
+static void patch_sysconf_plugin_module(SceModule *mod)
 {
     u32 text_addr = mod->text_addr;
     u32 top_addr = text_addr+mod->text_size;
@@ -268,7 +268,7 @@ static void patch_sysconf_plugin_module(SceModule2 *mod)
     _sw(0x3C020000 | ((u32)(p) >> 16), a); // lui $v0, 
     _sw(0x34420000 | ((u32)(p) & 0xFFFF), a + 4); // or $v0, $v0, 
 
-    sctrlHookImportByNID((SceModule2*)mod, "IoFileMgrForUser", 0x06A70004, myIoMkdir);
+    sctrlHookImportByNID((SceModule*)mod, "IoFileMgrForUser", 0x06A70004, myIoMkdir);
 }
 
 int fakeParamInexistance(void)
@@ -276,7 +276,7 @@ int fakeParamInexistance(void)
     return 0x80120005;
 }
 
-static void patch_game_plugin_module(SceModule2* mod)
+static void patch_game_plugin_module(SceModule* mod)
 {
     u32 text_addr = mod->text_addr;
     u32 top_addr = text_addr + mod->text_size;
@@ -326,7 +326,7 @@ static void patch_game_plugin_module(SceModule2* mod)
     }
 }
 
-static void patch_msvideo_main_plugin_module(SceModule2* mod)
+static void patch_msvideo_main_plugin_module(SceModule* mod)
 {
     u32 text_addr = mod->text_addr;
     u32 top_addr = text_addr + mod->text_size;
@@ -397,7 +397,7 @@ static void do_pspgo_umdvideo_patch(u32 addr){
     _sw(0x24020000 | PSP_4000, addr + 4);
 }
 
-static void patch_vsh_module_for_pspgo_umdvideo(SceModule2 *mod)
+static void patch_vsh_module_for_pspgo_umdvideo(SceModule *mod)
 {
     if (!has_umd_iso) return;
     u32 text_addr = mod->text_addr;
@@ -420,7 +420,7 @@ static void patch_vsh_module_for_pspgo_umdvideo(SceModule2 *mod)
     }
 }
 
-static void patch_vsh_module(SceModule2 * mod)
+static void patch_vsh_module(SceModule * mod)
 {
     //enable homebrew boot
     u32 top_addr = mod->text_addr+mod->text_size;
@@ -460,17 +460,17 @@ static void patch_vsh_module(SceModule2 * mod)
         
     }
 
-    sctrlHookImportByNID((SceModule2*)mod, "sceVshBridge", 0x21D4D038, homebrewloadexec);
-    sctrlHookImportByNID((SceModule2*)mod, "sceVshBridge", 0xE533E98C, homebrewloadexec);
+    sctrlHookImportByNID((SceModule*)mod, "sceVshBridge", 0x21D4D038, homebrewloadexec);
+    sctrlHookImportByNID((SceModule*)mod, "sceVshBridge", 0xE533E98C, homebrewloadexec);
 
     u32 vshloadexec_nids[] = {0xB8B07CAF, 0x791FCD43, 0x01730088, 0x5B7F3339};
     for (int i=0; i<NELEMS(vshloadexec_nids); i++){
-        sctrlHookImportByNID((SceModule2*)mod, "sceVshBridge", vshloadexec_nids[i], umdemuloadexec);
+        sctrlHookImportByNID((SceModule*)mod, "sceVshBridge", vshloadexec_nids[i], umdemuloadexec);
     }
     
-    sctrlHookImportByNID((SceModule2*)mod, "sceVshBridge", 0x63E69956, umdLoadExec);
-    sctrlHookImportByNID((SceModule2*)mod, "sceVshBridge", 0x0C0D5913, umdLoadExec);
-    sctrlHookImportByNID((SceModule2*)mod, "sceVshBridge", 0x81682A40, umdLoadExecUpdater);
+    sctrlHookImportByNID((SceModule*)mod, "sceVshBridge", 0x63E69956, umdLoadExec);
+    sctrlHookImportByNID((SceModule*)mod, "sceVshBridge", 0x0C0D5913, umdLoadExec);
+    sctrlHookImportByNID((SceModule*)mod, "sceVshBridge", 0x81682A40, umdLoadExecUpdater);
     
     if(psp_model == PSP_GO && has_umd_iso) {
         patch_vsh_module_for_pspgo_umdvideo(mod);
@@ -478,7 +478,7 @@ static void patch_vsh_module(SceModule2 * mod)
 
     if (se_config->skiplogos == 1 || se_config->skiplogos == 2){
         // patch GameBoot
-        sctrlHookImportByNID((SceModule2*)sceKernelFindModuleByName("sceVshBridge_Driver"), "sceDisplay_driver", 0x3552AB11, 0);
+        sctrlHookImportByNID((SceModule*)sceKernelFindModuleByName("sceVshBridge_Driver"), "sceDisplay_driver", 0x3552AB11, 0);
     }
 
     #if 0

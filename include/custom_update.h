@@ -21,7 +21,7 @@
 #include <module2.h>
 
 extern void load_server_file();
-extern void patch_update_plugin_module(SceModule2* mod);
-extern void patch_SceUpdateDL_Library(SceModule2* mod);
+extern void patch_update_plugin_module(SceModule* mod);
+extern void patch_SceUpdateDL_Library(SceModule* mod);
 
 #endif

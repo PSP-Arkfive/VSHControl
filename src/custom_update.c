@@ -63,7 +63,7 @@ void load_server_file(){
     }
 }
 
-void patch_update_plugin_module(SceModule2* mod)
+void patch_update_plugin_module(SceModule* mod)
 {
 
     if (!se_config->custom_update) return;
@@ -90,7 +90,7 @@ void patch_update_plugin_module(SceModule2* mod)
     }
 }
 
-void patch_SceUpdateDL_Library(SceModule2* mod)
+void patch_SceUpdateDL_Library(SceModule* mod)
 {
     if (!se_config->custom_update) return;
 
