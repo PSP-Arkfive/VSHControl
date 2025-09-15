@@ -18,7 +18,7 @@
 #ifndef CUSTOM_UPDATE_H
 #define CUSTOM_UPDATE_H
 
-#include <module2.h>
+
 
 extern void load_server_file();
 extern void patch_update_plugin_module(SceModule* mod);
