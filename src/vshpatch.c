@@ -520,7 +520,9 @@ static void hook_iso_io(void)
 int vshpatch_init(void)
 {
     previous = sctrlHENSetStartModuleHandler(vshpatch_module_chain);
-    prev_start = sctrlSetStartModuleExtra(StartModuleHandler);
+    if (sceKernelFindModuleByName("XmbControl") == NULL){
+        prev_start = sctrlSetStartModuleExtra(StartModuleHandler);
+    }
     patch_sceUSB_Driver();
     vpbp_init();
     hook_iso_io();
