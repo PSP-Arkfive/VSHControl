@@ -64,7 +64,7 @@ extern SEConfig* se_config;
 
 extern int has_umd_iso;
 
-static int vshpatch_module_chain(SceModule *mod)
+static void vshpatch_module_chain(SceModule *mod)
 {
 
     if(0 == strcmp(mod->modname, "sysconf_plugin_module")) {
@@ -113,8 +113,7 @@ static int vshpatch_module_chain(SceModule *mod)
 
 exit:
     sctrlFlushCache();
-    if (previous) return previous(mod);
-    return 0;
+    if (previous) previous(mod);
 }
 
 static int (*prev_start)(int modid, SceSize argsize, void * argp, int * modstatus, SceKernelSMOption * opt) = NULL;
