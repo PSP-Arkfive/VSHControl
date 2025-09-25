@@ -3,11 +3,6 @@
 #include <systemctrl.h>
 #include "main.h"
 
-void dump_hib(void* buf){
-    int fd = sceIoOpen("ms0:/hib.bin", PSP_O_WRONLY|PSP_O_CREAT|PSP_O_TRUNC, 0777);
-    sceIoWrite(fd, buf, 512);
-    sceIoClose(fd);
-}
 
 int vshCtrlHibernationExists(void)
 {
@@ -34,8 +29,6 @@ int vshCtrlHibernationExists(void)
     }
 
     ret = sceIoRead(fd, p, 512);
-
-    //dump_hib(buf);
 
     if(ret <= 0) {
         sceIoClose(fd);
