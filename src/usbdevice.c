@@ -111,7 +111,11 @@ static int _sceUsbStart(const char *driverName, int size, void *args)
         	}
 
         	if (g_usbdevice_modid >= 0) {
-        		ret = pspUsbDeviceSetDevice(se_config->usbdevice - 1, se_config->usbdevice_rdonly, 0);
+                int readonly = se_config->usbdevice_rdonly;
+                if (readonly == 2) {
+                    readonly = (se_config->usbdevice>0)?1:0;
+                }
+        		ret = pspUsbDeviceSetDevice(se_config->usbdevice - 1, readonly, 0);
         	}
         }
     }
