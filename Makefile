@@ -14,7 +14,7 @@ OBJS = main.o \
 	src/vshmenu.o \
 	src/usbdevice.o \
 	src/custom_update.o \
-	src/hibernation_delete.o \
+	src/hibernation.o \
 	src/registry.o \
 
 IMPORTS = imports.o
