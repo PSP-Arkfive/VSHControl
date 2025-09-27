@@ -44,12 +44,7 @@ int (*g_sceCtrlReadBufferPositive) (SceCtrlData *, int) = NULL;
 
 int vctrlVSHRegisterVshMenu(int (*ctrl)(SceCtrlData *, int))
 {
-    u32 k1;
-   
-    k1 = pspSdkSetK1(0);
     g_VshMenuCtrl = (void *) ((u32) ctrl | 0x80000000);
-    pspSdkSetK1(k1);
-
     return 0;
 }
 
@@ -67,6 +62,7 @@ int vctrlVSHExitVSHMenu(SEConfig *config, char *videoiso, int disctype)
     }
 
     g_VshMenuCtrl = NULL;
+    xmbctrl_vshmenu = 0;
     
     return 0;
 }
@@ -104,15 +100,6 @@ static int enter_xmbctrl_vshmenu(){
     return xmbctrlEnterVshMenuMode();
 }
 
-static int exit_xmbctrl_vshmenu(){
-    int (*xmbctrlExitVshMenuMode)() = (void*)
-        sctrlHENFindFunction("XmbControl", "XmbCtrlLib", 0x43377808);
-
-    if (xmbctrlExitVshMenuMode == NULL) return -1;
-
-    return xmbctrlExitVshMenuMode();
-}
-
 int _sceCtrlReadBufferPositive(SceCtrlData *ctrl, int count)
 {
     int ret;
@@ -123,7 +110,12 @@ int _sceCtrlReadBufferPositive(SceCtrlData *ctrl, int count)
     ret = (*g_sceCtrlReadBufferPositive)(ctrl, count);
     k1 = pspSdkSetK1(0);
 
-    if (sceKernelFindModuleByName("VshCtrlSatelite")) {
+    if (xmbctrl_vshmenu){
+        if (g_VshMenuCtrl) {
+            (*g_VshMenuCtrl)(ctrl, count);
+        }
+    }
+    else if (sceKernelFindModuleByName("VshCtrlSatelite")) {
         if (g_VshMenuCtrl) {
             (*g_VshMenuCtrl)(ctrl, count);
         } else {
@@ -192,15 +184,10 @@ int _sceCtrlReadBufferPositive(SceCtrlData *ctrl, int count)
         if (sceKernelFindModuleByName("camera_plugin_module"))
             goto exit;
 
-        if (xmbctrl_vshmenu){
-            if (exit_xmbctrl_vshmenu() == 0)
-                xmbctrl_vshmenu = 0;
+        if (enter_xmbctrl_vshmenu() == 0){
+            xmbctrl_vshmenu = 1;
         }
-        else {
-            if (enter_xmbctrl_vshmenu() == 0){
-                xmbctrl_vshmenu = 1;
-            }
-        }
+
         goto exit;
 
         force_load_satelite:
