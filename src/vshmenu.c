@@ -15,6 +15,9 @@
  * along with PRO CFW. If not, see <http://www.gnu.org/licenses/ .
  */
 
+
+#include <stdio.h>
+#include <string.h>
 #include <pspsdk.h>
 #include <pspsysmem_kernel.h>
 #include <pspkernel.h>
@@ -22,21 +25,12 @@
 #include <pspsysevent.h>
 #include <pspiofilemgr.h>
 #include <pspctrl.h>
-#include <stdio.h>
-#include <string.h>
+
 #include <ark.h>
+#include <vshctrl.h>
 #include <systemctrl.h>
 #include <systemctrl_se.h>
-#include "systemctrl_private.h"
-
-#define SENSE_KEY (PSP_CTRL_CIRCLE|PSP_CTRL_TRIANGLE|PSP_CTRL_CROSS|PSP_CTRL_SQUARE|PSP_CTRL_START|PSP_CTRL_SELECT)
-
-#define ALL_ALLOW    (PSP_CTRL_UP|PSP_CTRL_RIGHT|PSP_CTRL_DOWN|PSP_CTRL_LEFT)
-#define ALL_BUTTON   (PSP_CTRL_TRIANGLE|PSP_CTRL_CIRCLE|PSP_CTRL_CROSS|PSP_CTRL_SQUARE)
-#define ALL_TRIGGER  (PSP_CTRL_LTRIGGER|PSP_CTRL_RTRIGGER)
-#define ALL_FUNCTION (PSP_CTRL_SELECT|PSP_CTRL_START|PSP_CTRL_HOME|PSP_CTRL_HOLD|PSP_CTRL_NOTE)
-#define ALL_CTRL     (ALL_ALLOW|ALL_BUTTON|ALL_TRIGGER|ALL_FUNCTION)
-#define FORCE_LOAD   (PSP_CTRL_SELECT|ALL_TRIGGER)
+#include <systemctrl_private.h>
 
 extern ARKConfig* ark_config;
 extern SEConfig* se_config;
@@ -44,6 +38,7 @@ extern SEConfig* se_config;
 SceCtrlData *last_control_data = NULL;
 static int (*g_VshMenuCtrl) (SceCtrlData *, int);
 static SceUID g_satelite_mod_id = -1;
+static int xmbctrl_vshmenu = 0;
 
 int (*g_sceCtrlReadBufferPositive) (SceCtrlData *, int) = NULL;
 
@@ -100,33 +95,22 @@ static SceUID load_satelite(void)
     return modid;
 }
 
-SceUID get_thread_id(const char *name)
-{
-    int ret, count, i;
-    SceUID ids[128];
+static int enter_xmbctrl_vshmenu(){
+    int (*xmbctrlEnterVshMenuMode)() = (void*)
+        sctrlHENFindFunction("XmbControl", "XmbCtrlLib", 0xBE8D19DA);
 
-    ret = sceKernelGetThreadmanIdList(SCE_KERNEL_TMID_Thread, ids, sizeof(ids), &count);
+    if (xmbctrlEnterVshMenuMode == NULL) return -1;
 
-    if(ret < 0) {
-        return -1;
-    }
+    return xmbctrlEnterVshMenuMode();
+}
 
-    for(i=0; i<count; ++i) {
-        SceKernelThreadInfo info;
+static int exit_xmbctrl_vshmenu(){
+    int (*xmbctrlExitVshMenuMode)() = (void*)
+        sctrlHENFindFunction("XmbControl", "XmbCtrlLib", 0x43377808);
 
-        info.size = sizeof(info);
-        ret = sceKernelReferThreadStatus(ids[i], &info);
+    if (xmbctrlExitVshMenuMode == NULL) return -1;
 
-        if(ret < 0) {
-            continue;
-        }
-
-        if(0 == strcmp(info.name, name)) {
-            return ids[i];
-        }
-    }
-
-    return -2;
+    return xmbctrlExitVshMenuMode();
 }
 
 int _sceCtrlReadBufferPositive(SceCtrlData *ctrl, int count)
@@ -181,32 +165,43 @@ int _sceCtrlReadBufferPositive(SceCtrlData *ctrl, int count)
             goto exit;
         
         // Block Satellite Menu in NP Signup Module (Blue PSN Login Screen)
-        if (get_thread_id("SceNpSignupEvent") >= 0)
+        if (sctrlGetThreadUIDByName("SceNpSignupEvent") >= 0)
             goto exit;
 
         // Block Satellite Menu while playing Music
-        if (get_thread_id("VshCacheIoPrefetchThread") >= 0)
+        if (sctrlGetThreadUIDByName("VshCacheIoPrefetchThread") >= 0)
             goto exit;
 
         // Block Satellite Menu while watching Videos
-        if (get_thread_id("VideoDecoder") >= 0 || get_thread_id("AudioDecoder") >= 0)
+        if (sctrlGetThreadUIDByName("VideoDecoder") >= 0 || sctrlGetThreadUIDByName("AudioDecoder") >= 0)
             goto exit;
 
         // Block Satellite Menu while a Standard Dialog / Error is displayed
-        if (get_thread_id("ScePafJob") >= 0)
+        if (sctrlGetThreadUIDByName("ScePafJob") >= 0)
             goto exit;
 
         // Block Satellite Menu in PSN Store
-        if (get_thread_id("ScePSStoreBrowser2") >= 0)
+        if (sctrlGetThreadUIDByName("ScePSStoreBrowser2") >= 0)
             goto exit;
 
         // Block Satellite while accessing a DHCP Router
-        if (get_thread_id("SceNetDhcpClient") >= 0)
+        if (sctrlGetThreadUIDByName("SceNetDhcpClient") >= 0)
             goto exit;
 
         // Block Satellite Menu in Go!cam [Yoti]
         if (sceKernelFindModuleByName("camera_plugin_module"))
             goto exit;
+
+        if (xmbctrl_vshmenu){
+            if (exit_xmbctrl_vshmenu() == 0)
+                xmbctrl_vshmenu = 0;
+        }
+        else {
+            if (enter_xmbctrl_vshmenu() == 0){
+                xmbctrl_vshmenu = 1;
+            }
+        }
+        goto exit;
 
         force_load_satelite:
 
