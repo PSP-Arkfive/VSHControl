@@ -8,15 +8,15 @@ message(STATUS "DEBUG LEVEL = ${DEBUG}")
 include(FetchContent)
 
 FetchContent_Declare(
-   arkdevsdk
+   ark-dev-sdk
    GIT_REPOSITORY https://github.com/PSP-Arkfive/ark-dev-sdk.git
    GIT_TAG main
    EXCLUDE_FROM_ALL
 )
 
-FetchContent_MakeAvailable(arkdevsdk)
+FetchContent_MakeAvailable(ark-dev-sdk)
 
-set(ARKSDK ${arkdevsdk_SOURCE_DIR})
+set(ARKSDK ${ark-dev-sdk_SOURCE_DIR})
 
 add_prx_module(vshcontrol exports.exp)
 
