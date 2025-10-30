@@ -41,7 +41,7 @@
 #define GAME150_PATCH "__150"
 
 extern u32 psp_model;
-extern SEConfig* se_config;
+extern SEConfigARK* se_config;
 extern int _150_addon_enabled;
 static char g_iso_dir[128];
 static char g_temp_delete_dir[128];

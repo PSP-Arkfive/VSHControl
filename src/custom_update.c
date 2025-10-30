@@ -31,7 +31,7 @@
 #include <systemctrl_se.h>
 
 extern ARKConfig* ark_config;
-extern SEConfig* se_config;
+extern SEConfigARK* se_config;
 
 char server[64];
 

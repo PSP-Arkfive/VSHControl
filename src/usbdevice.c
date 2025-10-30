@@ -38,7 +38,7 @@
 static SceUID g_usbdevice_modid = -1;
 extern ARKConfig* ark_config;
 
-extern SEConfig* se_config;
+extern SEConfigARK* se_config;
 
 static SceUID load_start_usbdevice(void)
 {

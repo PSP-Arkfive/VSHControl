@@ -60,7 +60,7 @@ static void patch_Gameboot(SceModule *mod);
 static void patch_hibblock(SceModule *mod); 
 static void patch_msvideo_main_plugin_module(SceModule* mod);
 
-extern SEConfig* se_config;
+extern SEConfigARK* se_config;
 
 extern int has_umd_iso;
 
